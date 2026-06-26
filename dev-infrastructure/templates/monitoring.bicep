@@ -70,7 +70,7 @@ param alertsEnabled bool
 @description('The minimum IcM severity level (highest priority) that alerts can fire at. Alerts more critical than this ceiling will be degraded to this value. 0 means no ceiling.')
 param alertSeverityCeiling int = 0
 
-module actionGroups '../modules/metrics/actiongroups.bicep' = if (manageConnection) {
+module actionGroups '../modules/metrics/actiongroups.bicep' = if (manageConnection && alertsEnabled) {
   name: 'actionGroups'
   params: {
     icmEnvironment: icmEnvironment
@@ -96,10 +96,10 @@ module actionGroups '../modules/metrics/actiongroups.bicep' = if (manageConnecti
   }
 }
 
-var slActionGroups = manageConnection ? [actionGroups.outputs.actionGroupsSL] : []
-var rpActionGroups = manageConnection ? [actionGroups.outputs.actionGroupsRP] : []
-var sreActionGroups = manageConnection ? [actionGroups.outputs.actionGroupsSRE] : []
-var msftActionGroups = manageConnection ? [actionGroups.outputs.actionGroupsMSFT] : []
+var slActionGroups = (manageConnection && alertsEnabled) ? [actionGroups.outputs.actionGroupsSL] : []
+var rpActionGroups = (manageConnection && alertsEnabled) ? [actionGroups.outputs.actionGroupsRP] : []
+var sreActionGroups = (manageConnection && alertsEnabled) ? [actionGroups.outputs.actionGroupsSRE] : []
+var msftActionGroups = (manageConnection && alertsEnabled) ? [actionGroups.outputs.actionGroupsMSFT] : []
 
 module serviceAlerts '../modules/metrics/service-rules.bicep' = {
   name: 'serviceAlerts'
@@ -168,4 +168,5 @@ module hcpIngestionAlerts '../modules/metrics/amw-ingestion-alerts.bicep' = {
   }
 }
 
-output actionGroupSL string = manageConnection ? actionGroups.outputs.actionGroupsSL : ''
+#disable-next-line BCP318
+output actionGroupSL string = (manageConnection && alertsEnabled) ? actionGroups.outputs.actionGroupsSL : ''

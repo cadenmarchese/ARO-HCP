@@ -6,6 +6,7 @@ clouds:
         defaults:
           # Monitoring - Int needs higher limits
           monitoring:
+            alertsEnabled: false
             maxActiveTimeSeries: 4000000
             maxActiveTimeSeriesMillions: 4
             maxEventsPerMinute: 4000000
@@ -21,6 +22,8 @@ clouds:
       stg:
         # this is the MSFT STAGE environment
         defaults:
+          monitoring:
+            alertsEnabled: false
           # This must be defined here, so our ci jobs can know this
           kusto:
             kustoName: "hcp-stg-uk-2"
