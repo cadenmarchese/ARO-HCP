@@ -1545,10 +1545,7 @@ func BuildHCPClusterFromParams20260630(
 						Kms: &hcpsdk20260630preview.KmsEncryptionProfile{
 							VaultName:  to.Ptr(parameters.KeyVaultName),
 							Visibility: to.Ptr(hcpsdk20260630preview.KeyVaultVisibility(parameters.KeyVaultVisibility)),
-							ActiveKey: &hcpsdk20260630preview.KmsKey{
-								Name:    to.Ptr(parameters.EtcdEncryptionKeyName),
-								Version: to.Ptr(parameters.EtcdEncryptionKeyVersion),
-							},
+							KeyURL:     to.Ptr(parameters.EtcdEncryptionKeyURL),
 						},
 					},
 				},
@@ -1705,6 +1702,10 @@ func BuildNodePoolFromParams20260630(
 		}
 	} else {
 		nodePool.Properties.Replicas = to.Ptr(parameters.Replicas)
+	}
+
+	if parameters.EncryptionSetKeyURL != "" {
+		nodePool.Properties.Platform.OSDisk.EncryptionSetKeyURL = to.Ptr(parameters.EncryptionSetKeyURL)
 	}
 
 	return nodePool

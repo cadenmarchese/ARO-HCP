@@ -15,6 +15,7 @@
 package v20260630preview
 
 import (
+	"net/url"
 	"strings"
 
 	"github.com/google/uuid"
@@ -247,18 +248,9 @@ func newKmsEncryptionProfile(from *api.KmsEncryptionProfile) generated.KmsEncryp
 		return generated.KmsEncryptionProfile{}
 	}
 	return generated.KmsEncryptionProfile{
-		ActiveKey:  api.PtrOrNil(newKmsKey(&from.ActiveKey)),
+		KeyURL:     api.PtrOrNil(from.KeyURL),
 		VaultName:  api.PtrOrNil(from.ActiveKey.VaultName),
 		Visibility: api.PtrOrNil(generated.KeyVaultVisibility(from.Visibility)),
-	}
-}
-func newKmsKey(from *api.KmsKey) generated.KmsKey {
-	if from == nil {
-		return generated.KmsKey{}
-	}
-	return generated.KmsKey{
-		Name:    api.PtrOrNil(from.Name),
-		Version: api.PtrOrNil(from.Version),
 	}
 }
 
@@ -420,6 +412,9 @@ func (c *HcpOpenShiftCluster) ConvertToInternal(existing *api.HCPOpenShiftCluste
 		if c.Properties.Etcd != nil && c.Properties.Etcd.DataEncryption != nil && c.Properties.Etcd.DataEncryption.CustomerManaged != nil && c.Properties.Etcd.DataEncryption.CustomerManaged.Kms != nil {
 			if c.Properties.Etcd.DataEncryption.CustomerManaged.Kms.Visibility == nil {
 				errs = append(errs, field.Required(field.NewPath("properties", "etcd", "dataEncryption", "customerManaged", "kms", "visibility"), "field cannot be null"))
+			}
+			if c.Properties.Etcd.DataEncryption.CustomerManaged.Kms.KeyURL == nil {
+				errs = append(errs, field.Required(field.NewPath("properties", "etcd", "dataEncryption", "customerManaged", "kms", "keyUrl"), "field cannot be null"))
 			}
 		}
 		if c.Properties.Platform != nil {
@@ -649,22 +644,36 @@ func normalizeEtcdDataEncryptionProfile(p *generated.EtcdDataEncryptionProfile, 
 
 func normalizeCustomerManaged(p *generated.CustomerManagedEncryptionProfile, out *api.CustomerManagedEncryptionProfile) {
 	out.EncryptionType = api.CustomerManagedEncryptionType(api.Deref(p.EncryptionType))
-	if p.Kms != nil && p.Kms.ActiveKey != nil && (p.Kms.ActiveKey.Name != nil || p.Kms.ActiveKey.Version != nil) {
+	if p.Kms != nil && p.Kms.KeyURL != nil && len(*p.Kms.KeyURL) > 0 {
 		if out.Kms == nil {
 			out.Kms = &api.KmsEncryptionProfile{}
 		}
-
-		normalizeActiveKey(p.Kms.ActiveKey, &out.Kms.ActiveKey)
-		out.Kms.ActiveKey.VaultName = api.Deref(p.Kms.VaultName)
+		out.Kms.KeyURL = api.Deref(p.Kms.KeyURL)
 		out.Kms.Visibility = api.KeyVaultVisibility(api.Deref(p.Kms.Visibility))
+		parseKeyURLIntoKmsKey(out.Kms.KeyURL, &out.Kms.ActiveKey)
+		out.Kms.ActiveKey.VaultName = api.Deref(p.Kms.VaultName)
 	} else {
 		out.Kms = nil
 	}
 }
 
-func normalizeActiveKey(p *generated.KmsKey, out *api.KmsKey) {
-	out.Name = api.Deref(p.Name)
-	out.Version = api.Deref(p.Version)
+func parseKeyURLIntoKmsKey(keyURL string, out *api.KmsKey) {
+	u, err := url.Parse(keyURL)
+	if err != nil {
+		return
+	}
+	if hostname := u.Hostname(); hostname != "" {
+		if idx := strings.IndexByte(hostname, '.'); idx > 0 {
+			out.VaultName = hostname[:idx]
+		}
+	}
+	parts := strings.Split(strings.Trim(u.Path, "/"), "/")
+	if len(parts) >= 2 {
+		out.Name = parts[1]
+	}
+	if len(parts) >= 3 {
+		out.Version = parts[2]
+	}
 }
 
 func normalizeClusterImageRegistry(p *generated.ClusterImageRegistryProfile, out *api.ClusterImageRegistryProfile) {

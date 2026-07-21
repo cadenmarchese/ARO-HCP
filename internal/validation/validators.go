@@ -369,6 +369,10 @@ var (
 	diskEncryptionSetName            = `^[a-zA-Z0-9_-]+$`
 	diskEncryptionSetNameRegex       = regexp.MustCompile(diskEncryptionSetName)
 	diskEncryptionSetNameErrorString = `(must contain only alphanumeric characters, underscores, and hyphens)`
+
+	keyVaultKeyURL            = `^https://[a-zA-Z0-9-]+\.(vault\.azure\.net|managedhsm\.azure\.net)/keys/[a-zA-Z0-9-]+/[a-zA-Z0-9-]+$`
+	keyVaultKeyURLRegex       = regexp.MustCompile(keyVaultKeyURL)
+	keyVaultKeyURLErrorString = `(must be a valid key vault key URL of the form https://{vaultName}.{vault.azure.net|managedhsm.azure.net}/keys/{keyName}/{keyVersion})`
 )
 
 func MatchesRegex(_ context.Context, _ operation.Operation, fldPath *field.Path, value, _ *string, regex *regexp.Regexp, errorString string) field.ErrorList {

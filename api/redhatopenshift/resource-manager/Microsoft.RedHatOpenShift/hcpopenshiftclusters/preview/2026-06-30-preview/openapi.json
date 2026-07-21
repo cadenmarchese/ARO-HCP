@@ -2664,9 +2664,10 @@
             "create"
           ]
         },
-        "activeKey": {
-          "$ref": "#/definitions/KmsKey",
-          "description": "The details of the active key.",
+        "keyUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "The full URL to the encryption key in Azure Key Vault or Managed HSM, including key name and version.\nFor example: https://myvault.vault.azure.net/keys/mykey/abc123",
           "x-ms-mutability": [
             "read",
             "create"
@@ -2676,29 +2677,7 @@
       "required": [
         "vaultName",
         "visibility",
-        "activeKey"
-      ]
-    },
-    "KmsKey": {
-      "type": "object",
-      "description": "A representation of a KeyVault Secret.",
-      "properties": {
-        "name": {
-          "type": "string",
-          "description": "name is the name of the keyvault key used for encryption/decryption.",
-          "minLength": 1,
-          "maxLength": 255
-        },
-        "version": {
-          "type": "string",
-          "description": "version contains the version of the key to use.",
-          "minLength": 1,
-          "maxLength": 255
-        }
-      },
-      "required": [
-        "name",
-        "version"
+        "keyUrl"
       ]
     },
     "Label": {
@@ -3327,6 +3306,15 @@
               }
             ]
           },
+          "x-ms-mutability": [
+            "read",
+            "create"
+          ]
+        },
+        "encryptionSetKeyUrl": {
+          "type": "string",
+          "format": "uri",
+          "description": "The full URL to the key in Azure Key Vault that backs the DiskEncryptionSet.\nFor example: https://myvault.vault.azure.net/keys/mykey/abc123",
           "x-ms-mutability": [
             "read",
             "create"

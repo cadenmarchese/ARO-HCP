@@ -16,6 +16,7 @@ package v20260630preview
 
 import (
 	"encoding/json"
+	"fmt"
 	"math/rand"
 	"testing"
 
@@ -111,14 +112,14 @@ func TestRoundTripInternalExternalInternal(t *testing.T) {
 		},
 		func(j *api.CustomerManagedEncryptionProfile, c randfill.Continue) {
 			c.FillNoCustom(j)
-			// Kms cannot roundtrip if ActiveKey has neither Name nor Version,
-			// because normalizeCustomerManaged correctly skips creating a Kms
-			// entry when there is no key identifier.
-			if j.Kms != nil && j.Kms.ActiveKey.Name == "" && j.Kms.ActiveKey.Version == "" {
-				j.Kms = nil
+			if j.Kms != nil {
+				// ActiveKey fields must be alphanumeric to survive URL round-trip.
+				j.Kms.ActiveKey.VaultName = fmt.Sprintf("vault%d", c.Int31())
+				j.Kms.ActiveKey.Name = fmt.Sprintf("key%d", c.Int31())
+				j.Kms.ActiveKey.Version = fmt.Sprintf("v%d", c.Int31())
+				j.Kms.KeyURL = fmt.Sprintf("https://%s.vault.azure.net/keys/%s/%s", j.Kms.ActiveKey.VaultName, j.Kms.ActiveKey.Name, j.Kms.ActiveKey.Version)
 			}
 			// Visibility is required in v20260630preview when Kms is present.
-			// Ensure it has a valid value for roundtrip testing.
 			if j.Kms != nil && j.Kms.Visibility == "" {
 				j.Kms.Visibility = api.KeyVaultVisibilityPublic
 			}

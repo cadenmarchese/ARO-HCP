@@ -1358,7 +1358,7 @@ func (i *IngressProfile) UnmarshalJSON(data []byte) error {
 // MarshalJSON implements the json.Marshaller interface for type KmsEncryptionProfile.
 func (k KmsEncryptionProfile) MarshalJSON() ([]byte, error) {
 	objectMap := make(map[string]any)
-	populate(objectMap, "activeKey", k.ActiveKey)
+	populate(objectMap, "keyUrl", k.KeyURL)
 	populate(objectMap, "vaultName", k.VaultName)
 	populate(objectMap, "visibility", k.Visibility)
 	return json.Marshal(objectMap)
@@ -1373,47 +1373,14 @@ func (k *KmsEncryptionProfile) UnmarshalJSON(data []byte) error {
 	for key, val := range rawMsg {
 		var err error
 		switch key {
-		case "activeKey":
-			err = unpopulate(val, "ActiveKey", &k.ActiveKey)
+		case "keyUrl":
+			err = unpopulate(val, "KeyURL", &k.KeyURL)
 			delete(rawMsg, key)
 		case "vaultName":
 			err = unpopulate(val, "VaultName", &k.VaultName)
 			delete(rawMsg, key)
 		case "visibility":
 			err = unpopulate(val, "Visibility", &k.Visibility)
-			delete(rawMsg, key)
-		default:
-			err = fmt.Errorf("unmarshalling type %T, unknown field %q", k, key)
-		}
-		if err != nil {
-			return fmt.Errorf("unmarshalling type %T: %v", k, err)
-		}
-	}
-	return nil
-}
-
-// MarshalJSON implements the json.Marshaller interface for type KmsKey.
-func (k KmsKey) MarshalJSON() ([]byte, error) {
-	objectMap := make(map[string]any)
-	populate(objectMap, "name", k.Name)
-	populate(objectMap, "version", k.Version)
-	return json.Marshal(objectMap)
-}
-
-// UnmarshalJSON implements the json.Unmarshaller interface for type KmsKey.
-func (k *KmsKey) UnmarshalJSON(data []byte) error {
-	var rawMsg map[string]json.RawMessage
-	if err := json.Unmarshal(data, &rawMsg); err != nil {
-		return fmt.Errorf("unmarshalling type %T: %v", k, err)
-	}
-	for key, val := range rawMsg {
-		var err error
-		switch key {
-		case "name":
-			err = unpopulate(val, "Name", &k.Name)
-			delete(rawMsg, key)
-		case "version":
-			err = unpopulate(val, "Version", &k.Version)
 			delete(rawMsg, key)
 		default:
 			err = fmt.Errorf("unmarshalling type %T, unknown field %q", k, key)
@@ -2165,6 +2132,7 @@ func (o OsDiskProfile) MarshalJSON() ([]byte, error) {
 	populate(objectMap, "diskStorageAccountType", o.DiskStorageAccountType)
 	populate(objectMap, "diskType", o.DiskType)
 	populate(objectMap, "encryptionSetId", o.EncryptionSetID)
+	populate(objectMap, "encryptionSetKeyUrl", o.EncryptionSetKeyURL)
 	populate(objectMap, "sizeGiB", o.SizeGiB)
 	return json.Marshal(objectMap)
 }
@@ -2186,6 +2154,9 @@ func (o *OsDiskProfile) UnmarshalJSON(data []byte) error {
 			delete(rawMsg, key)
 		case "encryptionSetId":
 			err = unpopulate(val, "EncryptionSetID", &o.EncryptionSetID)
+			delete(rawMsg, key)
+		case "encryptionSetKeyUrl":
+			err = unpopulate(val, "EncryptionSetKeyURL", &o.EncryptionSetKeyURL)
 			delete(rawMsg, key)
 		case "sizeGiB":
 			err = unpopulate(val, "SizeGiB", &o.SizeGiB)

@@ -440,7 +440,7 @@ func preserveUnknownClusterFields(from, to *api.HCPOpenShiftCluster) {
 	to.CustomerProperties.Platform.VnetIntegrationSubnetID = from.CustomerProperties.Platform.VnetIntegrationSubnetID
 	// Ingress was added in v2026_06_30_preview.
 	to.CustomerProperties.Ingress = from.CustomerProperties.Ingress
-	// Visibility was added in v2025_12_23_preview.
+	// Visibility and KeyURL were added in v2025_12_23_preview and v2026_06_30_preview respectively.
 	if from.CustomerProperties.Etcd.DataEncryption.CustomerManaged != nil && from.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms != nil {
 		if to.CustomerProperties.Etcd.DataEncryption.CustomerManaged == nil {
 			to.CustomerProperties.Etcd.DataEncryption.CustomerManaged = &api.CustomerManagedEncryptionProfile{}
@@ -449,6 +449,7 @@ func preserveUnknownClusterFields(from, to *api.HCPOpenShiftCluster) {
 			to.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms = &api.KmsEncryptionProfile{}
 		}
 		to.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms.Visibility = from.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms.Visibility
+		to.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms.KeyURL = from.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms.KeyURL
 	}
 }
 

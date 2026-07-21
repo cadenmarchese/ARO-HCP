@@ -317,6 +317,7 @@ var (
 	toOSDiskProfileDiskStorageAccountType = func(oldObj *api.OSDiskProfile) *api.DiskStorageAccountType { return &oldObj.DiskStorageAccountType }
 	toOSDiskProfileEncryptionSetID        = func(oldObj *api.OSDiskProfile) *azcorearm.ResourceID { return oldObj.EncryptionSetID }
 	toOSDiskProfileDiskType               = func(oldObj *api.OSDiskProfile) *api.OsDiskType { return &oldObj.DiskType }
+	toOSDiskProfileEncryptionSetKeyURL    = func(oldObj *api.OSDiskProfile) *string { return &oldObj.EncryptionSetKeyURL }
 )
 
 func validateOSDiskProfile(ctx context.Context, op operation.Operation, fldPath *field.Path, newObj, oldObj *api.OSDiskProfile) field.ErrorList {
@@ -337,6 +338,12 @@ func validateOSDiskProfile(ctx context.Context, op operation.Operation, fldPath 
 	if newObj.EncryptionSetID != nil {
 		errs = append(errs, MaxLen(ctx, op, fldPath.Child("encryptionSetId"), &newObj.EncryptionSetID.Name, nil, MaxDiskEncryptionSetNameLen)...)
 		errs = append(errs, MatchesRegex(ctx, op, fldPath.Child("encryptionSetId"), &newObj.EncryptionSetID.Name, nil, diskEncryptionSetNameRegex, diskEncryptionSetNameErrorString)...)
+	}
+
+	// EncryptionSetKeyURL string `json:"encryptionSetKeyUrl,omitempty"`
+	errs = append(errs, immutableByCompare(ctx, op, fldPath.Child("encryptionSetKeyUrl"), &newObj.EncryptionSetKeyURL, safe.Field(oldObj, toOSDiskProfileEncryptionSetKeyURL))...)
+	if newObj.EncryptionSetKeyURL != "" {
+		errs = append(errs, MatchesRegex(ctx, op, fldPath.Child("encryptionSetKeyUrl"), &newObj.EncryptionSetKeyURL, nil, keyVaultKeyURLRegex, keyVaultKeyURLErrorString)...)
 	}
 
 	return errs

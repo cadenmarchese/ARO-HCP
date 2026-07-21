@@ -186,6 +186,8 @@ func (h *NodePool) ConvertToInternal(existing *api.HCPOpenShiftClusterNodePool) 
 func preserveUnknownNodePoolFields(from, to *api.HCPOpenShiftClusterNodePool) {
 	// DiskType was added in v20251223preview.
 	to.Properties.Platform.OSDisk.DiskType = from.Properties.Platform.OSDisk.DiskType
+	// EncryptionSetKeyURL was added in v2026_06_30_preview.
+	to.Properties.Platform.OSDisk.EncryptionSetKeyURL = from.Properties.Platform.OSDisk.EncryptionSetKeyURL
 }
 
 func normalizeNodePoolVersion(p *generated.NodePoolVersionProfile, out *api.NodePoolVersionProfile) {

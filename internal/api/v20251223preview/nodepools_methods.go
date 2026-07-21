@@ -184,6 +184,8 @@ func (h *NodePool) ConvertToInternal(existing *api.HCPOpenShiftClusterNodePool) 
 // this API version doesn't know about. Currently empty — no cross-version
 // customer fields exist yet between v20240610preview and v20251223preview.
 func preserveUnknownNodePoolFields(from, to *api.HCPOpenShiftClusterNodePool) {
+	// EncryptionSetKeyURL was added in v2026_06_30_preview.
+	to.Properties.Platform.OSDisk.EncryptionSetKeyURL = from.Properties.Platform.OSDisk.EncryptionSetKeyURL
 }
 
 func normalizeNodePoolVersion(p *generated.NodePoolVersionProfile, out *api.NodePoolVersionProfile) {

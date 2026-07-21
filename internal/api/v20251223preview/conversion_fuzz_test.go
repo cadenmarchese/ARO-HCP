@@ -113,6 +113,11 @@ func TestRoundTripInternalExternalInternal(t *testing.T) {
 			// UsesNewExternalAuthDeletionApproach does not roundtrip through the external type because it is purely an internal detail
 			j.UsesNewExternalAuthDeletionApproach = false
 		},
+		func(j *api.OSDiskProfile, c randfill.Continue) {
+			c.FillNoCustom(j)
+			// EncryptionSetKeyURL is a v20260630preview field that does not exist in v20251223preview.
+			j.EncryptionSetKeyURL = ""
+		},
 		func(j *api.CustomerManagedEncryptionProfile, c randfill.Continue) {
 			c.FillNoCustom(j)
 			// Kms cannot roundtrip if ActiveKey has neither Name nor Version,
@@ -125,6 +130,10 @@ func TestRoundTripInternalExternalInternal(t *testing.T) {
 			// Ensure it has a valid value for roundtrip testing.
 			if j.Kms != nil && j.Kms.Visibility == "" {
 				j.Kms.Visibility = api.KeyVaultVisibilityPublic
+			}
+			// KeyURL does not roundtrip through v20251223preview.
+			if j.Kms != nil {
+				j.Kms.KeyURL = ""
 			}
 		},
 	}, rand.NewSource(seed))

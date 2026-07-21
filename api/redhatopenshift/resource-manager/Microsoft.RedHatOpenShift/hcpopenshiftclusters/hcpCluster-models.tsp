@@ -551,11 +551,13 @@ model KmsKey {
   /** name is the name of the keyvault key used for encryption/decryption. */
   @maxLength(255)
   @minLength(1)
+  @removed(Versions.v2026_06_30_preview)
   name: string;
 
   /** version contains the version of the key to use. */
   @maxLength(255)
   @minLength(1)
+  @removed(Versions.v2026_06_30_preview)
   version: string;
 }
 
@@ -627,8 +629,16 @@ model KmsEncryptionProfile {
   @added(Versions.v2025_12_23_preview)
   visibility: KeyVaultVisibility;
 
+  /** The full URL to the encryption key in Azure Key Vault or Managed HSM, including key name and version.
+   * For example: https://myvault.vault.azure.net/keys/mykey/abc123
+   */
+  @visibility(Lifecycle.Read, Lifecycle.Create)
+  @added(Versions.v2026_06_30_preview)
+  keyUrl: url;
+
   /** The details of the active key. */
   @visibility(Lifecycle.Read, Lifecycle.Create)
+  @removed(Versions.v2026_06_30_preview)
   activeKey: KmsKey;
 }
 
@@ -859,6 +869,13 @@ model OsDiskProfile {
   @added(Versions.v2025_12_23_preview)
   @visibility(Lifecycle.Read, Lifecycle.Create)
   diskType?: OsDiskType = OsDiskType.Managed;
+
+  /** The full URL to the key in Azure Key Vault that backs the DiskEncryptionSet.
+   * For example: https://myvault.vault.azure.net/keys/mykey/abc123
+   */
+  @added(Versions.v2026_06_30_preview)
+  @visibility(Lifecycle.Read, Lifecycle.Create)
+  encryptionSetKeyUrl?: url;
 }
 
 /** The type of the OS disk

@@ -229,6 +229,7 @@ func normalizeOSDiskProfile(fldPath *field.Path, p *generated.OsDiskProfile, out
 		out.EncryptionSetID = nil
 	}
 	out.DiskType = api.OsDiskType(api.Deref(p.DiskType))
+	out.EncryptionSetKeyURL = api.Deref(p.EncryptionSetKeyURL)
 	return errs
 }
 
@@ -277,6 +278,7 @@ func newOSDiskProfile(from *api.OSDiskProfile) generated.OsDiskProfile {
 		DiskStorageAccountType: api.PtrOrNil(generated.DiskStorageAccountType(from.DiskStorageAccountType)),
 		EncryptionSetID:        api.ResourceIDToStringPtr(from.EncryptionSetID),
 		DiskType:               api.Ptr(generated.OsDiskType(from.DiskType)),
+		EncryptionSetKeyURL:    api.PtrOrNil(from.EncryptionSetKeyURL),
 	}
 }
 

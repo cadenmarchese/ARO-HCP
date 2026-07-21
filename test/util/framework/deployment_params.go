@@ -123,6 +123,7 @@ type ClusterParams20260630 struct {
 	KeyVaultName                  string
 	EtcdEncryptionKeyName         string
 	EtcdEncryptionKeyVersion      string
+	EtcdEncryptionKeyURL          string
 	EncryptionKeyManagementMode   string
 	EncryptionType                string
 	VnetIntegrationSubnetID       string
@@ -376,10 +377,11 @@ type NodePoolParams20260630 struct {
 	// When omitted from the create payload or nil here, the cluster-configured global nodeDrainTimeoutMinutes kicks in.
 	NodeDrainTimeoutMinutes *int32
 	// AutoScaling enables nodepool autoscaling. When set, Replicas is ignored.
-	AutoScaling      *NodePoolAutoScalingParams
-	AvailabilityZone string
-	AutoRepair       bool
-	Tags             map[string]*string
+	AutoScaling         *NodePoolAutoScalingParams
+	AvailabilityZone    string
+	AutoRepair          bool
+	EncryptionSetKeyURL string
+	Tags                map[string]*string
 }
 
 // NodePoolAutoScalingParams contains min/max node counts for nodepool autoscaling
@@ -695,6 +697,7 @@ func PopulateClusterParamsFromCustomerInfraDeployment20260630(
 	params.KeyVaultName = keyVaultName
 	params.EtcdEncryptionKeyVersion = etcdEncryptionKeyVersion
 	params.EtcdEncryptionKeyName = etcdEncryptionKeyName
+	params.EtcdEncryptionKeyURL = fmt.Sprintf("https://%s.vault.azure.net/keys/%s/%s", keyVaultName, etcdEncryptionKeyName, etcdEncryptionKeyVersion)
 	params.NsgResourceID = nsgResourceID
 	params.SubnetResourceID = subnetResourceID
 	params.VnetIntegrationSubnetID = vnetIntegrationSubnetID

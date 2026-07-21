@@ -8,14 +8,14 @@ import "time"
 
 // APIProfile - Information about the API of a cluster.
 type APIProfile struct {
-	// The internet visibility of the OpenShift API server
-	Visibility *Visibility
-
 	// READ-ONLY; URL endpoint for the API server
 	URL *string
 
 	// The list of authorized IPv4 CIDR blocks allowed to access the API server. Maximum 500 entries.
 	AuthorizedCIDRs []*string
+
+	// The internet visibility of the OpenShift API server
+	Visibility *Visibility
 }
 
 // AzureResourceManagerCommonTypesManagedServiceIdentityUpdate - Managed service identity (system assigned and/or user assigned
@@ -544,23 +544,15 @@ type IngressProfile struct {
 // to create the cluster must be authorized to access this keyvault, e.g using the AzureCLI: az keyvault
 // set-policy -n $KEYVAULT_NAME --key-permissions decrypt encrypt --spn (YOUR APPLICATION CLIENT ID)
 type KmsEncryptionProfile struct {
-	// REQUIRED; The details of the active key.
-	ActiveKey *KmsKey
+	// REQUIRED; The full URL to the encryption key in Azure Key Vault or Managed HSM, including key name and version. For example:
+	// https://myvault.vault.azure.net/keys/mykey/abc123
+	KeyURL *string
 
 	// REQUIRED; vaultName is the name of the keyvault that contains the secret.
 	VaultName *string
 
 	// REQUIRED; visibility of the keyvault that contains the secret.
 	Visibility *KeyVaultVisibility
-}
-
-// KmsKey - A representation of a KeyVault Secret.
-type KmsKey struct {
-	// REQUIRED; name is the name of the keyvault key used for encryption/decryption.
-	Name *string
-
-	// REQUIRED; version contains the version of the key to use.
-	Version *string
 }
 
 // Label represents the Kubernetes label
@@ -897,6 +889,9 @@ type OsDiskProfile struct {
 	// HostedCluster.Spec.Platform.Azure.Location.
 	// Details on how to create a Disk Encryption Set can be found here: https://learn.microsoft.com/en-us/azure/virtual-machines/disks-enable-customer-managed-keys-portal#set-up-your-disk-encryption-set
 	EncryptionSetID *string
+
+	// The full URL to the key in Azure Key Vault that backs the DiskEncryptionSet. For example: https://myvault.vault.azure.net/keys/mykey/abc123
+	EncryptionSetKeyURL *string
 
 	// The OS disk size in GiB
 	SizeGiB *int32

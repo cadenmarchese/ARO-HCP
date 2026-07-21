@@ -89,6 +89,7 @@ func MinimumValidClusterTestCase() *HCPOpenShiftCluster {
 		EncryptionType: CustomerManagedEncryptionTypeKMS,
 		Kms: &KmsEncryptionProfile{
 			Visibility: KeyVaultVisibilityPublic,
+			KeyURL:     "https://test-vault.vault.azure.net/keys/test-key/test-version",
 			ActiveKey: KmsKey{
 				Name:      "test-key",
 				VaultName: "test-vault",

@@ -106,9 +106,9 @@ func TestRoundTripInternalExternalInternal(t *testing.T) {
 		func(j *api.OSDiskProfile, c randfill.Continue) {
 			c.FillNoCustom(j)
 			// DiskType is a v20251223preview field that does not exist in v20240610preview.
-			// It cannot roundtrip through this version's external type.
-			// Cross-version preservation is handled by preserveUnknownNodePoolFields.
 			j.DiskType = ""
+			// EncryptionSetKeyURL is a v20260630preview field that does not exist in v20240610preview.
+			j.EncryptionSetKeyURL = ""
 		},
 		func(j *api.HCPOpenShiftClusterExternalAuthServiceProviderProperties, c randfill.Continue) {
 			c.FillNoCustom(j)
@@ -126,8 +126,10 @@ func TestRoundTripInternalExternalInternal(t *testing.T) {
 		},
 		func(j *api.KmsEncryptionProfile, c randfill.Continue) {
 			c.FillNoCustom(j)
-			// Visibility was added in v2025_12_23_preview and does not exist in v2024_06_10_preview
+			// Visibility was added in v2025_12_23_preview and does not exist in v2024_06_10_preview.
 			j.Visibility = ""
+			// KeyURL was added in v2026_06_30_preview and does not exist in v2024_06_10_preview.
+			j.KeyURL = ""
 		},
 		func(j *api.CosmosMetadata, c randfill.Continue) {
 			c.FillNoCustom(j)

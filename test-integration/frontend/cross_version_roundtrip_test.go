@@ -324,10 +324,7 @@ func clusterCreatePayload(clusterName, apiVersion string) []byte {
         "customerManaged": {
           "encryptionType": "KMS",
           "kms": {
-            "activeKey": {
-              "name": "vc-encryption-key",
-              "version": "2024-12-01-preview"
-            },
+            "keyUrl": "https://vc-key-vault.vault.azure.net/keys/vc-encryption-key/20241201preview",
             "vaultName": "vc-key-vault",
             "visibility": "Public"
           }

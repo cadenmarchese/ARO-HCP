@@ -245,6 +245,8 @@ type CustomerManagedEncryptionProfile struct {
 type KmsEncryptionProfile struct {
 	Visibility KeyVaultVisibility `json:"visibility,omitempty"`
 	ActiveKey  KmsKey             `json:"activeKey,omitempty"`
+	// Written by: Frontend PUT Cluster (Create)
+	KeyURL string `json:"keyUrl,omitempty"`
 }
 
 // KmsKey represents an Azure KeyVault secret.

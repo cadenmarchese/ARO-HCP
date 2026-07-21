@@ -492,6 +492,10 @@ func (c *HcpOpenShiftCluster) ConvertToInternal(existing *api.HCPOpenShiftCluste
 func preserveUnknownClusterFields(from, to *api.HCPOpenShiftCluster) {
 	// Ingress was added in v2026_06_30_preview.
 	to.CustomerProperties.Ingress = from.CustomerProperties.Ingress
+	// KeyURL was added in v2026_06_30_preview.
+	if from.CustomerProperties.Etcd.DataEncryption.CustomerManaged != nil && from.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms != nil && to.CustomerProperties.Etcd.DataEncryption.CustomerManaged != nil && to.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms != nil {
+		to.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms.KeyURL = from.CustomerProperties.Etcd.DataEncryption.CustomerManaged.Kms.KeyURL
+	}
 }
 
 func normalizeManagedIdentity(identity *generated.ManagedServiceIdentity) *arm.ManagedServiceIdentity {

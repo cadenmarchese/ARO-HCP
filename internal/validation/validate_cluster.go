@@ -899,6 +899,7 @@ func validateCustomerManagedEncryptionProfile(ctx context.Context, op operation.
 var (
 	toKmsEncryptionProfileVisibility = func(oldObj *api.KmsEncryptionProfile) *api.KeyVaultVisibility { return &oldObj.Visibility }
 	toKmsEncryptionProfileActiveKey  = func(oldObj *api.KmsEncryptionProfile) *api.KmsKey { return &oldObj.ActiveKey }
+	toKmsEncryptionProfileKeyURL     = func(oldObj *api.KmsEncryptionProfile) *string { return &oldObj.KeyURL }
 )
 
 func validateKmsEncryptionProfile(ctx context.Context, op operation.Operation, fldPath *field.Path, newObj, oldObj *api.KmsEncryptionProfile) field.ErrorList {
@@ -916,6 +917,12 @@ func validateKmsEncryptionProfile(ctx context.Context, op operation.Operation, f
 	//ActiveKey KmsKey `json:"activeKey,omitempty"`
 	errs = append(errs, immutableByReflect(ctx, op, fldPath.Child("activeKey"), &newObj.ActiveKey, safe.Field(oldObj, toKmsEncryptionProfileActiveKey))...)
 	errs = append(errs, validateKmsKey(ctx, op, fldPath.Child("activeKey"), &newObj.ActiveKey, safe.Field(oldObj, toKmsEncryptionProfileActiveKey))...)
+
+	// KeyURL string `json:"keyUrl,omitempty"`
+	errs = append(errs, immutableByCompare(ctx, op, fldPath.Child("keyUrl"), &newObj.KeyURL, safe.Field(oldObj, toKmsEncryptionProfileKeyURL))...)
+	if newObj.KeyURL != "" {
+		errs = append(errs, MatchesRegex(ctx, op, fldPath.Child("keyUrl"), &newObj.KeyURL, nil, keyVaultKeyURLRegex, keyVaultKeyURLErrorString)...)
+	}
 
 	return errs
 }

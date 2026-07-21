@@ -147,6 +147,8 @@ type OSDiskProfile struct {
 	DiskStorageAccountType DiskStorageAccountType `json:"diskStorageAccountType,omitempty"`
 	EncryptionSetID        *azcorearm.ResourceID  `json:"encryptionSetId,omitempty"`
 	DiskType               OsDiskType             `json:"diskType,omitempty"`
+	// Written by: Frontend PUT NodePool (Create)
+	EncryptionSetKeyURL string `json:"encryptionSetKeyUrl,omitempty"`
 }
 
 // NodePoolAutoScaling represents a node pool autoscaling configuration.

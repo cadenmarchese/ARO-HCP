@@ -87,6 +87,25 @@ type ClusterImageRegistryProfile struct {
 	State *ClusterImageRegistryState
 }
 
+// Condition represents an observation of a resource's state.
+type Condition struct {
+	// READ-ONLY; The last time the condition transitioned from one status to another.
+	LastTransitionTime *time.Time
+
+	// READ-ONLY; A human readable message indicating details about the transition. This may be an empty string.
+	Message *string
+
+	// READ-ONLY; A programmatic identifier indicating the reason for the condition's last transition. This value should be a
+	// CamelCase string.
+	Reason *string
+
+	// READ-ONLY; The status of the condition.
+	Status *StatusType
+
+	// READ-ONLY; Type of the condition. This is a PascalCase identifier representing the type of the condition.
+	Type *ConditionType
+}
+
 // ConsoleProfile - Configuration of the cluster web console
 type ConsoleProfile struct {
 	// READ-ONLY; The cluster web console URL endpoint
@@ -252,6 +271,9 @@ type ExternalAuthProperties struct {
 
 	// READ-ONLY; Provisioning state
 	ProvisioningState *ExternalAuthProvisioningState
+
+	// READ-ONLY; Status of the external auth resource
+	Status *ResourceStatus
 }
 
 // ExternalAuthPropertiesUpdate - External Auth profile
@@ -401,6 +423,9 @@ type HcpOpenShiftClusterProperties struct {
 
 	// READ-ONLY; The status of the last operation.
 	ProvisioningState *ProvisioningState
+
+	// READ-ONLY; Status of the cluster resource
+	Status *ResourceStatus
 }
 
 // HcpOpenShiftClusterPropertiesUpdate - HCP cluster properties
@@ -572,23 +597,15 @@ type IngressProfile struct {
 // to create the cluster must be authorized to access this keyvault, e.g using the AzureCLI: az keyvault
 // set-policy -n $KEYVAULT_NAME --key-permissions decrypt encrypt --spn (YOUR APPLICATION CLIENT ID)
 type KmsEncryptionProfile struct {
-	// REQUIRED; The details of the active key.
-	ActiveKey *KmsKey
+	// REQUIRED; The full URL to the encryption key in Azure Key Vault or Managed HSM, including key name and version. For example:
+	// https://myvault.vault.azure.net/keys/mykey/abc123
+	KeyURL *string
 
 	// REQUIRED; vaultName is the name of the keyvault that contains the secret.
 	VaultName *string
 
 	// REQUIRED; visibility of the keyvault that contains the secret.
 	Visibility *KeyVaultVisibility
-}
-
-// KmsKey - A representation of a KeyVault Secret.
-type KmsKey struct {
-	// REQUIRED; name is the name of the keyvault key used for encryption/decryption.
-	Name *string
-
-	// REQUIRED; version contains the version of the key to use.
-	Version *string
 }
 
 // Label represents the Kubernetes label
@@ -748,6 +765,9 @@ type NodePoolProperties struct {
 
 	// READ-ONLY; Provisioning state
 	ProvisioningState *ProvisioningState
+
+	// READ-ONLY; Status of the node pool resource
+	Status *ResourceStatus
 }
 
 // NodePoolPropertiesUpdate - Represents the node pool properties
@@ -923,6 +943,9 @@ type OsDiskProfile struct {
 	// Details on how to create a Disk Encryption Set can be found here: https://learn.microsoft.com/en-us/azure/virtual-machines/disks-enable-customer-managed-keys-portal#set-up-your-disk-encryption-set
 	EncryptionSetID *string
 
+	// The full URL to the key in Azure Key Vault that backs the DiskEncryptionSet. For example: https://myvault.vault.azure.net/keys/mykey/abc123
+	EncryptionSetKeyURL *string
+
 	// The OS disk size in GiB
 	SizeGiB *int32
 }
@@ -993,6 +1016,12 @@ type Resource struct {
 
 	// READ-ONLY; The type of the resource. E.g. "Microsoft.Compute/virtualMachines" or "Microsoft.Storage/storageAccounts"
 	Type *string
+}
+
+// ResourceStatus represents the observed status of the resource.
+type ResourceStatus struct {
+	// READ-ONLY; The conditions on the resource
+	Conditions []*Condition
 }
 
 // RoleDefinition - A single role definition required by a given operator
