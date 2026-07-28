@@ -1,0 +1,26 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: ingress-cert-rotation-prometheus-rule
+  namespace: monitoring
+spec:
+  groups:
+  - name: ingress-cert-rotation
+    labels:
+      component: ingress-cert-rotation
+    interval: 5m
+    rules:
+    - alert: IngressCertRotationOverdue
+      expr: |
+        (
+          (time() - x509_cert_not_before{secret_namespace="aks-istio-ingress", secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential"})
+          /
+          (x509_cert_not_after{secret_namespace="aks-istio-ingress", secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential"} - x509_cert_not_before{secret_namespace="aks-istio-ingress", secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential"})
+        ) > 0.55
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        description: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue. More than 55% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 50%.'
+        summary: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue'
+        correlationId: 'IngressCertRotationOverdue/{{ $labels.secret_name }}'

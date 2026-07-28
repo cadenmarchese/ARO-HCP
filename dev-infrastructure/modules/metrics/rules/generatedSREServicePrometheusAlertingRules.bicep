@@ -91,3 +91,43 @@ resource backendRetryhotloop 'Microsoft.AlertsManagement/prometheusRuleGroups@20
     ]
   }
 }
+
+resource ingressCertRotation 'Microsoft.AlertsManagement/prometheusRuleGroups@2023-03-01' = {
+  name: 'ingress-cert-rotation'
+  location: location
+  properties: {
+    interval: 'PT5M'
+    rules: [
+      {
+        actions: [
+          for g in actionGroups: {
+            actionGroupId: g
+            actionProperties: {
+              'IcM.Title': '#$.labels.cluster#: #$.annotations.title#'
+              'IcM.CorrelationId': '#$.annotations.correlationId#'
+            }
+          }
+        ]
+        alert: 'IngressCertRotationOverdue'
+        enabled: true
+        labels: {
+          component: 'ingress-cert-rotation'
+          severity: 'warning'
+        }
+        annotations: {
+          correlationId: 'IngressCertRotationOverdue/{{ $labels.secret_name }}'
+          description: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue. More than 55% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 50%.'
+          info: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue. More than 55% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 50%.'
+          summary: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue'
+          title: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue'
+        }
+        expression: '((time() - x509_cert_not_before{secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential",secret_namespace="aks-istio-ingress"}) / (x509_cert_not_after{secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential",secret_namespace="aks-istio-ingress"} - x509_cert_not_before{secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential",secret_namespace="aks-istio-ingress"})) > 0.55'
+        for: 'PT1H'
+        severity: severityCeiling > 0 ? max(3, severityCeiling) : 3
+      }
+    ]
+    scopes: [
+      azureMonitoring
+    ]
+  }
+}
