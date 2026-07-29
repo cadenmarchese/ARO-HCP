@@ -1,0 +1,83 @@
+rule_files:
+- hcpCertRotation-prometheusRule.yaml
+evaluation_interval: 1m
+tests:
+# Test 1: KAS cert alert fires when 66% of lifetime has elapsed (past 0.65 threshold)
+# Cert total lifetime = 60000s. not_before = -39600 so at time()=0,
+# elapsed fraction = 39600/60000 = 0.66 > 0.65.
+- interval: 1m
+  input_series:
+  - series: 'x509_cert_not_before{secret_namespace="ocm-dev-abc123", secret_name="kube-apiserver-tls-cert"}'
+    values: '-39600x70'
+  - series: 'x509_cert_not_after{secret_namespace="ocm-dev-abc123", secret_name="kube-apiserver-tls-cert"}'
+    values: '20400x70'
+  alert_rule_test:
+  - eval_time: 65m
+    alertname: HCPKubeApiServerCertRotationOverdue
+    exp_alerts:
+    - exp_labels:
+        secret_namespace: ocm-dev-abc123
+        secret_name: kube-apiserver-tls-cert
+        severity: warning
+        component: hcp-cert-rotation
+      exp_annotations:
+        description: 'HCP kube-apiserver certificate in namespace ocm-dev-abc123 rotation is overdue. More than 65% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 49%.'
+        summary: 'HCP kube-apiserver certificate rotation overdue in ocm-dev-abc123'
+        correlationId: 'HCPKubeApiServerCertRotationOverdue/ocm-dev-abc123'
+
+# Test 2: KAS cert does not fire when 40% elapsed (healthy)
+- interval: 1m
+  input_series:
+  - series: 'x509_cert_not_before{secret_namespace="ocm-dev-abc123", secret_name="kube-apiserver-tls-cert"}'
+    values: '-24000x70'
+  - series: 'x509_cert_not_after{secret_namespace="ocm-dev-abc123", secret_name="kube-apiserver-tls-cert"}'
+    values: '36000x70'
+  alert_rule_test:
+  - eval_time: 65m
+    alertname: HCPKubeApiServerCertRotationOverdue
+    exp_alerts: []
+
+# Test 3: KAS cert in wrong namespace does not fire
+- interval: 1m
+  input_series:
+  - series: 'x509_cert_not_before{secret_namespace="kube-system", secret_name="kube-apiserver-tls-cert"}'
+    values: '-39600x70'
+  - series: 'x509_cert_not_after{secret_namespace="kube-system", secret_name="kube-apiserver-tls-cert"}'
+    values: '20400x70'
+  alert_rule_test:
+  - eval_time: 65m
+    alertname: HCPKubeApiServerCertRotationOverdue
+    exp_alerts: []
+
+# Test 4: Ingress cert alert fires when 66% elapsed
+- interval: 1m
+  input_series:
+  - series: 'x509_cert_not_before{secret_namespace="open-cluster-management-policies", secret_name="default-ingress-tls-cert-abc123"}'
+    values: '-39600x70'
+  - series: 'x509_cert_not_after{secret_namespace="open-cluster-management-policies", secret_name="default-ingress-tls-cert-abc123"}'
+    values: '20400x70'
+  alert_rule_test:
+  - eval_time: 65m
+    alertname: HCPIngressCertRotationOverdue
+    exp_alerts:
+    - exp_labels:
+        secret_namespace: open-cluster-management-policies
+        secret_name: default-ingress-tls-cert-abc123
+        severity: warning
+        component: hcp-cert-rotation
+      exp_annotations:
+        description: 'HCP ingress certificate default-ingress-tls-cert-abc123 rotation is overdue. More than 65% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 49%.'
+        summary: 'HCP ingress certificate default-ingress-tls-cert-abc123 rotation overdue'
+        correlationId: 'HCPIngressCertRotationOverdue/default-ingress-tls-cert-abc123'
+
+# Test 5: Ingress cert does not fire when 40% elapsed (healthy)
+- interval: 1m
+  input_series:
+  - series: 'x509_cert_not_before{secret_namespace="open-cluster-management-policies", secret_name="default-ingress-tls-cert-abc123"}'
+    values: '-24000x70'
+  - series: 'x509_cert_not_after{secret_namespace="open-cluster-management-policies", secret_name="default-ingress-tls-cert-abc123"}'
+    values: '36000x70'
+  alert_rule_test:
+  - eval_time: 65m
+    alertname: HCPIngressCertRotationOverdue
+    exp_alerts: []

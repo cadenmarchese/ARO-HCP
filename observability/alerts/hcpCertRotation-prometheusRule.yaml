@@ -1,0 +1,40 @@
+apiVersion: monitoring.coreos.com/v1
+kind: PrometheusRule
+metadata:
+  name: hcp-cert-rotation-prometheus-rule
+  namespace: monitoring
+spec:
+  groups:
+  - name: hcp-cert-rotation
+    labels:
+      component: hcp-cert-rotation
+    interval: 5m
+    rules:
+    - alert: HCPKubeApiServerCertRotationOverdue
+      expr: |
+        (
+          (time() - x509_cert_not_before{secret_name="kube-apiserver-tls-cert", secret_namespace=~"ocm-.+-.*"})
+          /
+          (x509_cert_not_after{secret_name="kube-apiserver-tls-cert", secret_namespace=~"ocm-.+-.*"} - x509_cert_not_before{secret_name="kube-apiserver-tls-cert", secret_namespace=~"ocm-.+-.*"})
+        ) > 0.65
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        description: 'HCP kube-apiserver certificate in namespace {{ $labels.secret_namespace }} rotation is overdue. More than 65% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 49%.'
+        summary: 'HCP kube-apiserver certificate rotation overdue in {{ $labels.secret_namespace }}'
+        correlationId: 'HCPKubeApiServerCertRotationOverdue/{{ $labels.secret_namespace }}'
+    - alert: HCPIngressCertRotationOverdue
+      expr: |
+        (
+          (time() - x509_cert_not_before{secret_name=~"default-ingress-tls-cert-.+", secret_namespace="open-cluster-management-policies"})
+          /
+          (x509_cert_not_after{secret_name=~"default-ingress-tls-cert-.+", secret_namespace="open-cluster-management-policies"} - x509_cert_not_before{secret_name=~"default-ingress-tls-cert-.+", secret_namespace="open-cluster-management-policies"})
+        ) > 0.65
+      for: 1h
+      labels:
+        severity: warning
+      annotations:
+        description: 'HCP ingress certificate {{ $labels.secret_name }} rotation is overdue. More than 65% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 49%.'
+        summary: 'HCP ingress certificate {{ $labels.secret_name }} rotation overdue'
+        correlationId: 'HCPIngressCertRotationOverdue/{{ $labels.secret_name }}'

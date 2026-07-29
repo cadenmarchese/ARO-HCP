@@ -2,15 +2,15 @@ rule_files:
 - ingressCertRotation-prometheusRule.yaml
 evaluation_interval: 1m
 tests:
-# Test 1: Warning fires when 56% of lifetime has elapsed (past 0.55 threshold)
-# Cert total lifetime = 60000s. not_before = -33600 so at time()=0,
-# elapsed fraction = 33600/60000 = 0.56 > 0.55.
+# Test 1: Warning fires when 66% of lifetime has elapsed (past 0.65 threshold)
+# Cert total lifetime = 60000s. not_before = -39600 so at time()=0,
+# elapsed fraction = 39600/60000 = 0.66 > 0.65.
 - interval: 1m
   input_series:
   - series: 'x509_cert_not_before{secret_namespace="aks-istio-ingress", secret_name="frontend-credential"}'
-    values: '-33600x70'
+    values: '-39600x70'
   - series: 'x509_cert_not_after{secret_namespace="aks-istio-ingress", secret_name="frontend-credential"}'
-    values: '26400x70'
+    values: '20400x70'
   alert_rule_test:
   - eval_time: 65m
     alertname: IngressCertRotationOverdue
@@ -21,12 +21,12 @@ tests:
         severity: warning
         component: ingress-cert-rotation
       exp_annotations:
-        description: 'Ingress certificate frontend-credential rotation is overdue. More than 55% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 50%.'
+        description: 'Ingress certificate frontend-credential rotation is overdue. More than 65% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 50%.'
         summary: 'Ingress certificate frontend-credential rotation is overdue'
         correlationId: 'IngressCertRotationOverdue/frontend-credential'
 
 # Test 2: No alert when only 40% of lifetime has elapsed (healthy cert)
-# not_before = -24000 so elapsed = 24000/60000 = 0.40 < 0.55
+# not_before = -24000 so elapsed = 24000/60000 = 0.40 < 0.65
 - interval: 1m
   input_series:
   - series: 'x509_cert_not_before{secret_namespace="aks-istio-ingress", secret_name="sessiongate-credential"}'
@@ -60,5 +60,18 @@ tests:
     values: '16800x40'
   alert_rule_test:
   - eval_time: 35m
+    alertname: IngressCertRotationOverdue
+    exp_alerts: []
+
+# Test 5: No alert at 60% elapsed (below 0.65 threshold)
+# not_before = -36000 so elapsed = 36000/60000 = 0.60 < 0.65
+- interval: 1m
+  input_series:
+  - series: 'x509_cert_not_before{secret_namespace="aks-istio-ingress", secret_name="admin-api-credential"}'
+    values: '-36000x70'
+  - series: 'x509_cert_not_after{secret_namespace="aks-istio-ingress", secret_name="admin-api-credential"}'
+    values: '24000x70'
+  alert_rule_test:
+  - eval_time: 65m
     alertname: IngressCertRotationOverdue
     exp_alerts: []

@@ -16,11 +16,11 @@ spec:
           (time() - x509_cert_not_before{secret_namespace="aks-istio-ingress", secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential"})
           /
           (x509_cert_not_after{secret_namespace="aks-istio-ingress", secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential"} - x509_cert_not_before{secret_namespace="aks-istio-ingress", secret_name=~"frontend-credential|admin-api-credential|sessiongate-credential"})
-        ) > 0.55
+        ) > 0.65
       for: 1h
       labels:
         severity: warning
       annotations:
-        description: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue. More than 55% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 50%.'
+        description: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue. More than 65% of the certificate lifetime has elapsed. Key Vault auto-renew should have replaced it at 50%.'
         summary: 'Ingress certificate {{ $labels.secret_name }} rotation is overdue'
         correlationId: 'IngressCertRotationOverdue/{{ $labels.secret_name }}'
