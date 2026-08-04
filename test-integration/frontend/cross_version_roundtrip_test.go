@@ -53,6 +53,7 @@ const (
 	v20251223 = "2025-12-23-preview"
 	v20260630 = "2026-06-30-preview"
 	v20260901 = "2026-09-01-preview"
+	v20261003 = "2026-10-03-preview"
 )
 
 // crossVersionTestEntry pairs a subtest name with its runner function.
@@ -415,7 +416,7 @@ func clusterCreatePayload(clusterName, apiVersion string) []byte {
 }`, clusterName, subscriptionID, subscriptionID, subscriptionID))
 
 	case v20260901:
-		// v20260901 payload
+		// v20260901 payload — uses keyEncryptionKeyUrl instead of activeKey/vaultName
 		return []byte(fmt.Sprintf(`{
   "identity": {
     "type": "UserAssigned",
@@ -440,12 +441,8 @@ func clusterCreatePayload(clusterName, apiVersion string) []byte {
         "customerManaged": {
           "encryptionType": "KMS",
           "kms": {
-            "activeKey": {
-              "name": "vc-encryption-key",
-              "version": "2024-12-01-preview"
-            },
-            "vaultName": "vc-key-vault",
-            "visibility": "Public"
+            "visibility": "Public",
+            "keyEncryptionKeyUrl": "https://vc-key-vault.vault.azure.net/keys/vc-encryption-key/2024-12-01-preview"
           }
         },
         "keyManagementMode": "CustomerManaged"
