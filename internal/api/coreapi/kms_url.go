@@ -20,8 +20,28 @@ import (
 	"strings"
 )
 
-// ParseKeyEncryptionKeyURL parses a Key URL and returns the vault name, key name, and key version.
-// The URL must use HTTPS and have the form /keys/{name}/{version}.
+const (
+	KmsKeyVaultTypeKeyVault   = "keyVault"
+	KmsKeyVaultTypeManagedHSM = "managedHSM"
+)
+
+// IsManagedHSMKeyURL returns true if keyURL identifies a Managed HSM key.
+func IsManagedHSMKeyURL(keyURL string) bool {
+	return strings.Contains(keyURL, ".managedhsm.azure.net")
+}
+
+// KeyVaultTypeFromURL returns the vault type constant based on the URL hostname suffix.
+func KeyVaultTypeFromURL(keyURL string) string {
+	if IsManagedHSMKeyURL(keyURL) {
+		return KmsKeyVaultTypeManagedHSM
+	}
+	return KmsKeyVaultTypeKeyVault
+}
+
+// ParseKeyEncryptionKeyURL parses a Key Vault or Managed HSM key URL and returns
+// the vault name, key name, and key version. The URL must use HTTPS and have a
+// hostname ending in .vault.azure.net or .managedhsm.azure.net, with a path
+// of the form /keys/{name}/{version}.
 func ParseKeyEncryptionKeyURL(keyURL string) (vaultName, keyName, version string, err error) {
 	u, err := url.Parse(keyURL)
 	if err != nil {

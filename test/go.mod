@@ -75,6 +75,7 @@ require (
 	cloud.google.com/go/monitoring v1.24.3 // indirect
 	cloud.google.com/go/storage v1.62.1 // indirect
 	dario.cat/mergo v1.0.1 // indirect
+	github.com/Azure/ARO-HCP/test/sdk/v20261003preview/resourcemanager/redhatopenshifthcp/armredhatopenshifthcp v0.0.0-00010101000000-000000000000 // indirect
 	github.com/Azure/ARO-Tools/pipelines v0.0.0-20260901142504-86903908c305 // indirect
 	github.com/Azure/ARO-Tools/tools/cmdutils v0.0.0-20260901142504-86903908c305 // indirect
 	github.com/Azure/ARO-Tools/tools/grafanactl v0.0.0-20260901142504-86903908c305 // indirect

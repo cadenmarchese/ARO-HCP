@@ -101,6 +101,9 @@ func ValidateCluster(ctx context.Context, op operation.Operation, newCluster, ol
 	// version profile and the service-provider exact pin, so it lives at cluster level.
 	errs = append(errs, validateNightlyChannelRequiresFullVersion(ctx, op, newCluster, oldCluster)...)
 
+	// Managed HSM KMS requires OpenShift >= 4.22 (HyperShift gained mHSM support in 4.22 via PR #9199).
+	errs = append(errs, validateManagedHSMRequiresMinimumVersion(ctx, op, newCluster, oldCluster)...)
+
 	// there are pieces of clusterProperties that are dependent upon values in .identity
 	errs = append(errs, validateOperatorAuthenticationAgainstIdentities(ctx, op, newCluster, oldCluster)...)
 
@@ -204,6 +207,36 @@ func validateNightlyChannelRequiresFullVersion(_ context.Context, op operation.O
 			"must be specified as MAJOR.MINOR.PATCH (optionally with a pre-release, e.g. a nightly build suffix) when channelGroup is \"nightly\"",
 		)}
 	}
+
+	return nil
+}
+
+var minManagedHSMOpenShiftVersion = semver.Version{Major: 4, Minor: 22}
+
+func validateManagedHSMRequiresMinimumVersion(_ context.Context, _ operation.Operation, newCluster, _ *coreapi.HCPOpenShiftCluster) field.ErrorList {
+	cm := newCluster.CustomerProperties.Etcd.DataEncryption.CustomerManaged
+	if cm == nil || cm.Kms == nil || !coreapi.IsManagedHSMKeyURL(cm.Kms.KeyEncryptionKeyURL) {
+		return nil
+	}
+
+	versionID := newCluster.CustomerProperties.Version.ID
+	if len(versionID) == 0 {
+		return nil
+	}
+
+	requestedVersion, err := semver.ParseTolerant(versionID)
+	if err != nil {
+		return nil
+	}
+
+	clusterVersion := semver.Version{Major: requestedVersion.Major, Minor: requestedVersion.Minor}
+	if clusterVersion.LT(minManagedHSMOpenShiftVersion) {
+		return field.ErrorList{field.Forbidden(
+			field.NewPath("customerProperties", "etcd", "dataEncryption", "customerManaged", "kms", "keyEncryptionKeyUrl"),
+			fmt.Sprintf("Managed HSM KMS requires OpenShift version %d.%d or later", minManagedHSMOpenShiftVersion.Major, minManagedHSMOpenShiftVersion.Minor),
+		)}
+	}
+
 	return nil
 }
 
