@@ -33,6 +33,7 @@ import (
 
 	azcorearm "github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 
+	arohcpclientapi "github.com/openshift-online/ocm-api-model/clientapi/arohcp/v1alpha1"
 	arohcpv1alpha1 "github.com/openshift-online/ocm-sdk-go/arohcp/v1alpha1"
 	ocmerrors "github.com/openshift-online/ocm-sdk-go/errors"
 
@@ -706,6 +707,7 @@ func getBaseCSClusterBuilder(updating bool) *arohcpv1alpha1.ClusterBuilder {
 						EncryptionType("kms").
 						Kms(arohcpv1alpha1.NewAzureKmsEncryption().
 							Visibility(arohcpv1alpha1.AzureKmsEncryptionVisibilityPublic).
+							KeyVaultType(arohcpclientapi.AzureKmsEncryptionKeyVaultTypeKeyVault).
 							ActiveKey(arohcpv1alpha1.NewAzureKmsKey().
 								KeyName("test-key").
 								KeyVaultName("test-vault").
@@ -1150,6 +1152,7 @@ func TestBuildCSCluster(t *testing.T) {
 								EncryptionType("kms").
 								Kms(arohcpv1alpha1.NewAzureKmsEncryption().
 									Visibility(arohcpv1alpha1.AzureKmsEncryptionVisibilityPublic).
+									KeyVaultType(arohcpclientapi.AzureKmsEncryptionKeyVaultTypeKeyVault).
 									ActiveKey(arohcpv1alpha1.NewAzureKmsKey().
 										KeyName("test-key").
 										KeyVaultName("test-vault").
@@ -1216,6 +1219,7 @@ func TestBuildCSCluster(t *testing.T) {
 								EncryptionType("kms").
 								Kms(arohcpv1alpha1.NewAzureKmsEncryption().
 									Visibility(arohcpv1alpha1.AzureKmsEncryptionVisibilityPrivate).
+									KeyVaultType(arohcpclientapi.AzureKmsEncryptionKeyVaultTypeKeyVault).
 									ActiveKey(arohcpv1alpha1.NewAzureKmsKey().
 										KeyName("test-key").
 										KeyVaultName("test-vault").

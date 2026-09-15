@@ -26,6 +26,8 @@ import (
 	. "github.com/onsi/ginkgo/v2"
 	. "github.com/onsi/gomega"
 
+	"k8s.io/apimachinery/pkg/util/rand"
+
 	"github.com/Azure/ARO-HCP/test/util/framework"
 	"github.com/Azure/ARO-HCP/test/util/labels"
 	"github.com/Azure/ARO-HCP/test/util/verifiers"
@@ -71,13 +73,18 @@ var _ = Describe("Cluster Etcd Managed HSM Encryption", func() {
 			cert0Base64, cert1Base64, cert2Base64, err := generateMHSMSecurityDomainCertificates(certDir)
 			Expect(err).NotTo(HaveOccurred(), "failed to generate mHSM security domain certificates")
 
+			By("resolving the deploying principal for Managed HSM admin access")
+			deployerIdentity, err := tc.GetCurrentAzureIdentityDetails(ctx)
+			Expect(err).NotTo(HaveOccurred(), "failed to resolve deploying principal identity")
+			Expect(deployerIdentity.ObjectID).NotTo(BeEmpty(), "deploying principal object ID was empty")
+
 			By("deploying Managed HSM with activation and initial key creation")
-			hsmName := fmt.Sprintf("mhsm-%s", customerClusterName)
+			hsmName := framework.SuffixName("mhsm", rand.String(12), 24)
 			keyName := "etcd-cmk"
 			mhsmDeploymentName := fmt.Sprintf("mhsm-deploy-%s", customerClusterName)
 
 			mhsmDeploymentResult, err := tc.CreateBicepTemplateAndWait(ctx,
-				framework.WithTemplateFromFS(TestArtifactsFS, "test-artifacts/managed-hsm-bootstrap.bicep"),
+				framework.WithTemplateFromFS(TestArtifactsFS, "test-artifacts/generated-test-artifacts/managed-hsm-bootstrap.json"),
 				framework.WithDeploymentName(mhsmDeploymentName),
 				framework.WithScope(framework.BicepDeploymentScopeResourceGroup),
 				framework.WithClusterResourceGroup(*resourceGroup.Name),
@@ -89,7 +96,7 @@ var _ = Describe("Cluster Etcd Managed HSM Encryption", func() {
 					"wrappingCertificate1Base64": cert1Base64,
 					"wrappingCertificate2Base64": cert2Base64,
 					"securityDomainQuorum":       2,
-					"additionalAdminObjectIds":   []interface{}{},
+					"additionalAdminObjectIds":   []interface{}{deployerIdentity.ObjectID},
 					"keyManagerObjectIds":        []interface{}{},
 					"enablePurgeProtection":      false,
 					"softDeleteRetentionInDays":  7,
@@ -123,15 +130,13 @@ var _ = Describe("Cluster Etcd Managed HSM Encryption", func() {
 			clusterParams, err = tc.CreateClusterCustomerResources20261003(ctx,
 				resourceGroup,
 				clusterParams,
-				map[string]interface{}{
-					"deployKeyVault": false,
-				},
+				map[string]interface{}{},
 				TestArtifactsFS,
 				framework.RBACScopeResourceGroup,
 			)
 			Expect(err).NotTo(HaveOccurred(), "failed to create customer resources for etcd mHSM cluster")
 
-			By("granting KMS identity Managed HSM Crypto User role on the key")
+			By("granting Managed HSM Crypto User role on the key to the runtime KMS caller(s)")
 			Expect(clusterParams.UserAssignedIdentitiesProfile).NotTo(BeNil(), "cluster params UserAssignedIdentitiesProfile was nil")
 			kmsIdentityResourceID := clusterParams.UserAssignedIdentitiesProfile.ControlPlaneOperators[framework.KmsMiName]
 			Expect(kmsIdentityResourceID).NotTo(BeNil(), "KMS control plane operator identity resource ID was nil")
@@ -139,20 +144,29 @@ var _ = Describe("Cluster Etcd Managed HSM Encryption", func() {
 			Expect(err).NotTo(HaveOccurred(), "failed to resolve KMS identity principal ID")
 			Expect(kmsIdentityPrincipalID).NotTo(BeEmpty(), "KMS identity principalId was empty")
 
-			assignRoleCmd := exec.CommandContext(ctx, "az", "keyvault", "role", "assignment", "create",
-				"--hsm-name", hsmName,
-				"--assignee-object-id", kmsIdentityPrincipalID,
-				"--assignee-principal-type", "ServicePrincipal",
-				"--role", "Managed HSM Crypto User",
-				"--scope", fmt.Sprintf("/keys/%s", keyName),
-				"--only-show-errors",
-				"--output", "none")
-			assignOutput, err := assignRoleCmd.CombinedOutput()
-			Expect(err).NotTo(HaveOccurred(), "failed to grant Managed HSM Crypto User role to KMS identity: %s", string(assignOutput))
+			// Grant the per-cluster KMS managed identity — the real runtime caller in environments with a
+			// live Managed Identities Data Plane (stage/prod). In dev/CI that dataplane is mocked, so every
+			// operator (including the KMS plugin) authenticates as the MSI mock service principal instead;
+			// there we must also grant that principal (MI_MOCK_PRINCIPAL_ID) or the encrypt call gets 403.
+			// mHSM has its own per-HSM data-plane RBAC, so a subscription-scope grant cannot cover this HSM.
+			grantMHSMCryptoUser := func(principalID string) {
+				assignRoleCmd := exec.CommandContext(ctx, "az", "keyvault", "role", "assignment", "create",
+					"--hsm-name", hsmName,
+					"--assignee-object-id", principalID,
+					"--assignee-principal-type", "ServicePrincipal",
+					"--role", "Managed HSM Crypto User",
+					"--scope", fmt.Sprintf("/keys/%s", keyName),
+					"--only-show-errors",
+					"--output", "none")
+				assignOutput, err := assignRoleCmd.CombinedOutput()
+				Expect(err).NotTo(HaveOccurred(), "failed to grant Managed HSM Crypto User role to %s: %s", principalID, string(assignOutput))
+				GinkgoLogr.Info("Granted Managed HSM Crypto User role", "principalID", principalID, "keyName", keyName)
+			}
 
-			GinkgoLogr.Info("Granted Managed HSM Crypto User role to KMS identity",
-				"kmsIdentityPrincipalID", kmsIdentityPrincipalID,
-				"keyName", keyName)
+			grantMHSMCryptoUser(kmsIdentityPrincipalID)
+			if miMockPrincipalID := framework.MIMockPrincipalID(); miMockPrincipalID != "" {
+				grantMHSMCryptoUser(miMockPrincipalID)
+			}
 
 			clusterParams.KeyEncryptionKeyURL = keyID
 

@@ -26,6 +26,7 @@ import (
 
 	azcorearm "github.com/Azure/azure-sdk-for-go/sdk/azcore/arm"
 
+	arohcpclientapi "github.com/openshift-online/ocm-api-model/clientapi/arohcp/v1alpha1"
 	arohcpv1alpha1 "github.com/openshift-online/ocm-sdk-go/arohcp/v1alpha1"
 	cmv1 "github.com/openshift-online/ocm-sdk-go/clustersmgmt/v1"
 	ocmerrors "github.com/openshift-online/ocm-sdk-go/errors"
@@ -322,6 +323,10 @@ func convertEtcdRPToCS(in coreapi.EtcdProfile, activeKeyBuilder *arohcpv1alpha1.
 				KeyVaultName(vaultName)
 			azureKmsEncryptionBuilder := arohcpv1alpha1.NewAzureKmsEncryption().ActiveKey(activeKeyBuilder)
 
+			if kms.KeyEncryptionKeyURL != "" {
+				azureKmsEncryptionBuilder.KeyVaultType(convertKmsKeyVaultTypeRPToCS(kms.KeyEncryptionKeyURL))
+			}
+
 			if len(in.DataEncryption.CustomerManaged.Kms.Visibility) != 0 {
 				visibility, err := convertKeyVaultVisibilityRPToCS(in.DataEncryption.CustomerManaged.Kms.Visibility)
 				if err != nil {
@@ -335,6 +340,13 @@ func convertEtcdRPToCS(in coreapi.EtcdProfile, activeKeyBuilder *arohcpv1alpha1.
 		azureEtcdDataEncryptionBuilder.CustomerManaged(azureEtcdDataEncryptionCustomerManagedBuilder)
 	}
 	return arohcpv1alpha1.NewAzureEtcdEncryption().DataEncryption(azureEtcdDataEncryptionBuilder), nil
+}
+
+func convertKmsKeyVaultTypeRPToCS(keyURL string) arohcpclientapi.AzureKmsEncryptionKeyVaultType {
+	if coreapi.IsManagedHSMKeyURL(keyURL) {
+		return arohcpclientapi.AzureKmsEncryptionKeyVaultTypeManagedHsm
+	}
+	return arohcpclientapi.AzureKmsEncryptionKeyVaultTypeKeyVault
 }
 
 func convertCIDRBlockAllowAccessRPToCS(in coreapi.CustomerAPIProfile) (*arohcpv1alpha1.CIDRBlockAccessBuilder, error) {

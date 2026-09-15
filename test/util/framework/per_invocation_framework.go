@@ -406,6 +406,13 @@ func location() string {
 	return os.Getenv("LOCATION")
 }
 
+// MIMockPrincipalID returns MI_MOCK_PRINCIPAL_ID, the object ID of the mocked managed-identity
+// service principal that per-cluster operators authenticate as in environments where the Managed
+// Identities Data Plane is mocked (dev/CI). Empty in real-MI environments (stage/prod).
+func MIMockPrincipalID() string {
+	return os.Getenv("MI_MOCK_PRINCIPAL_ID")
+}
+
 // testUserClientID returns the value of AZURE_CLIENT_ID environment variable
 func testUserClientID() string {
 	// can't use gomega in this method since it is used outside of It()

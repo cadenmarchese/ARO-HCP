@@ -391,7 +391,7 @@ resource bootstrap 'Microsoft.Resources/deploymentScripts@2023-08-01' = {
               --name "$KEY_NAME" \
               --kty RSA-HSM \
               --size "$KEY_SIZE" \
-              --ops wrapKey unwrapKey \
+              --ops encrypt decrypt \
               --only-show-errors \
               --output json 2>&1)"
           key_creation_exit_code=$?
