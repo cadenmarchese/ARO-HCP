@@ -177,6 +177,12 @@ func networkLoadBalancingPublicIPAndRouteTablesActions() []string {
 	}
 }
 
+func networkLoadBalancingNotActions() []string {
+	return []string{
+		"Microsoft.Network/loadBalancers/backendAddressPools/join/action",
+	}
+}
+
 func networkPrivateConnectivityActions() []string {
 	return []string{
 		"Microsoft.Network/privatelinkservices/delete",
@@ -229,6 +235,7 @@ func networkInterfacesNotActions() []string {
 	return []string{
 		"Microsoft.Network/networkInterfaces/effectiveRouteTable/action",
 		"Microsoft.Network/networkSecurityGroups/join/action",
+		"Microsoft.Network/networkInterfaces/write",
 	}
 }
 

@@ -144,6 +144,7 @@ func denyAssignmentDefinitions(cluster *coreapi.Cluster) []denyAssignmentDefinit
 			dataPlaneOperators:      []string{operatorDiskCSIDriver, operatorFileCSIDriver},
 			includeServiceManagedID: true,
 			actions:                 networkLoadBalancingPublicIPAndRouteTablesActions(),
+			notActions:              networkLoadBalancingNotActions(),
 		},
 		{
 			denyAssignmentType:      denyAssignmentSuffixNetworkPrivateConn,
